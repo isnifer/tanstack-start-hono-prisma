@@ -6,6 +6,9 @@ export function createRouter() {
     routeTree,
     defaultPreload: 'intent',
     scrollRestoration: true,
+    context: {
+      session: undefined!,
+    },
   })
 }
 

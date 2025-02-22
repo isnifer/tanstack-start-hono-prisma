@@ -1,5 +1,5 @@
 import appCss from '@/index.css?url'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import {
   HeadContent,
   Outlet,
@@ -9,18 +9,11 @@ import {
 } from '@tanstack/react-router'
 import type { Session } from 'better-auth'
 import { userQueryOptions } from '@/lib/auth.client'
+import queryClient from '@/lib/queryClient'
 
 interface MyRouterContext {
   session: Session | null
 }
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-})
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({

@@ -8,7 +8,9 @@ export type Credentials = null | {
   session: Session
 }
 
-const auth = createAuthClient({ baseURL: import.meta.env.VITE_API_URL })
+const auth = createAuthClient({
+  baseURL: import.meta.env.VITE_API_URL,
+})
 
 export default auth
 

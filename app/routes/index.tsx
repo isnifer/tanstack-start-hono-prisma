@@ -22,12 +22,24 @@ function RouteComponent() {
   const { message, session } = Route.useLoaderData()
 
   return (
-    <div>
-      <div>{message}</div>
-      <Link to="/hello">Hello</Link>
+    <div className="flex flex-col gap-4">
+      <div className="text-2xl font-bold">{message}</div>
+      <div className="flex flex-col gap-1">
+        <p>Available routes:</p>
+        <p>
+          <Link to="/hello" className="text-blue-500 hover:underline">
+            Hello
+          </Link>
+        </p>
+        <p>
+          <Link to="/wallet" className="text-blue-500 hover:underline">
+            Wallet
+          </Link>
+        </p>
+      </div>
       {!session?.user && (
         <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white"
+          className="cursor-pointer rounded-md bg-blue-500 px-4 py-2 text-white"
           onClick={() => auth.signIn.social({ provider: 'google' })}>
           Sign in with Google
         </button>

@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
 import type { AppTypings } from '@/typings/AppTypings'
 import { auth } from '@/lib/auth.server'
+import v1 from './v1'
+
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
 
 const app = new Hono<AppTypings<'optional'>>()
   .basePath('/api')
@@ -38,6 +43,11 @@ const app = new Hono<AppTypings<'optional'>>()
   })
 
   .get('/protected', c => c.json({ message: 'Hello Protected World' }, 200))
+
+  /**
+   * API v1
+   */
+  .route('/v1', v1)
 
 export default app
 

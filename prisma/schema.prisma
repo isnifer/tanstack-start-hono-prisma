@@ -14,15 +14,17 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+  id                String              @id
+  name              String
+  email             String
+  emailVerified     Boolean
+  image             String?
+  createdAt         DateTime
+  updatedAt         DateTime
+  sessions          Session[]
+  accounts          Account[]
+  balance           BigInt              @default(0)
+  walletTransactions WalletTransaction[]
 
   @@unique([email])
   @@map("user")
@@ -71,4 +73,36 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model WalletTransaction {
+  id          String          @id @default(uuid(7)) /// Unique identifier for the transaction
+  user        User            @relation(fields: [userId], references: [id]) /// Relation to the user
+  userId      String /// Foreign key linking to the user
+  type        WalletTransactionType /// Type of transaction (DEPOSIT, WAGER, PAYOUT, etc.)
+  amount      BigInt /// Transaction amount stored in minor currency unit (e.g., cents)
+  description String? /// Optional description of the transaction
+  createdAt   DateTime        @default(now()) /// Timestamp when the transaction occurred
+
+  @@index([userId, createdAt]) /// Index for quick lookups by user and date
+  @@map("wallet_transaction")
+}
+
+/// Defines the types of transactions in the gambling/betting platform.
+enum WalletTransactionType {
+  DEPOSIT /// Funds added to a user's account (via card, crypto, bank transfer, etc.)
+  WITHDRAWAL /// Funds withdrawn from a user's account to an external payment method
+  WAGER /// Amount deducted when a user places a bet
+  PAYOUT /// Winnings credited to a user's account after a successful bet
+  BONUS /// Promotional or loyalty bonus credited to a user's account
+  FEE /// Service fees such as withdrawal charges or processing fees
+  REFUND /// Funds returned to a user's account due to a canceled or voided bet
+  ADJUSTMENT /// Manual balance adjustment by administrators (e.g., corrections, compensations)
+  CASHBACK /// A percentage of losses refunded to a user as an incentive
+  TRANSFER /// Internal transfer between user accounts (if supported)
+  REVERSAL /// Reversal of a previous transaction (e.g., a deposit rollback)
+  PENALTY /// Deduction applied due to rule violations or penalties
+  AFFILIATE_PAYOUT /// Commission payout to affiliates for referring users
+
+  @@map("wallet_transaction_type")
 }
