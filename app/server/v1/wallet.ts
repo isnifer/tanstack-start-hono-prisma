@@ -74,4 +74,44 @@ const wallet = new Hono<AppTypings<'required'>>()
     return c.json({ message: 'Money added to wallet', balance: user?.balance.toString() }, 200)
   })
 
+  /**
+   * Wager money from wallet
+   */
+  .post(
+    '/wager',
+    zValidator(
+      'json',
+      z.object({
+        amount: z.number({ description: 'Bet amount, minimum $5' }).min(500),
+        description: z.string({ description: 'Description of the bet' }).default('Placed a bet'),
+      })
+    ),
+    async c => {
+      const { amount, description } = c.req.valid('json')
+      const userId = c.get('user').id
+
+      let user = await prisma.user.findFirst({ where: { id: userId }, select: { balance: true } })
+      if (!user) {
+        return c.json({ message: 'User not found' }, 404)
+      }
+
+      if (user.balance < amount) {
+        return c.json({ message: 'Insufficient balance' }, 400)
+      }
+
+      await prisma.walletTransaction.create({
+        data: {
+          userId,
+          amount: -amount,
+          description,
+          type: 'WAGER',
+        },
+      })
+
+      user = await prisma.user.findFirst({ where: { id: userId }, select: { balance: true } })
+
+      return c.json({ message: 'Money wagered', balance: user?.balance.toString() }, 200)
+    }
+  )
+
 export default wallet

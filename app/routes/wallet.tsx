@@ -26,6 +26,9 @@ export const Route = createFileRoute('/wallet')({
 const AddMoneyFormType = z.object({ amount: z.string() })
 type TAddMoneyForm = z.infer<typeof AddMoneyFormType>
 
+const WagerFormType = z.object({ amount: z.string(), description: z.string().optional() })
+type TWagerForm = z.infer<typeof WagerFormType>
+
 function RouteComponent() {
   const { balance, transactions } = Route.useLoaderData()
 
@@ -37,6 +40,16 @@ function RouteComponent() {
   } = useForm<TAddMoneyForm>({
     resolver: zodResolver(AddMoneyFormType),
     defaultValues: { amount: '' },
+  })
+
+  const {
+    handleSubmit: handleWagerSubmit,
+    register: wagerRegister,
+    setValue: wagerSetValue,
+    formState: { isSubmitting: isWagerSubmitting },
+  } = useForm<TWagerForm>({
+    resolver: zodResolver(WagerFormType),
+    defaultValues: { amount: '', description: '' },
   })
 
   const router = useRouter()
@@ -52,10 +65,27 @@ function RouteComponent() {
     if (!response.ok) {
       console.error(response)
     } else {
-      console.log('invalidating')
       await router.invalidate()
-      console.log('invalidated')
       setValue('amount', '')
+    }
+  }
+
+  const wagerSubmitHandler: SubmitHandler<TWagerForm> = async data => {
+    const amount = Number(data.amount)
+    if (isNaN(amount)) {
+      alert('Invalid amount')
+      return
+    }
+
+    const response = await apiClient.api.v1.wallet.wager.$post({
+      json: { amount, description: data.description },
+    })
+    if (!response.ok) {
+      console.error(response)
+    } else {
+      await router.invalidate()
+      wagerSetValue('amount', '')
+      wagerSetValue('description', '')
     }
   }
 
@@ -84,30 +114,57 @@ function RouteComponent() {
       <h1 className="text-2xl font-bold">This is a wallet</h1>
       <p className="text-lg">Balance: {balance}</p>
       <p className="text-lg">Transactions: {transactions.length}</p>
-      <form onSubmit={handleSubmit(submitHandler)} className="flex max-w-xs flex-col gap-2">
-        <input
-          {...register('amount')}
-          type="number"
-          disabled={isSubmitting}
-          className="w-full rounded border p-2 text-black"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full cursor-pointer rounded bg-blue-500 p-2 text-white">
-          {isSubmitting ? 'Adding...' : 'Add'}
-        </button>
-      </form>
-      <ul className="list-disc">
-        {transactions.map(transaction => (
-          <li key={transaction.id} className="flex items-center gap-2 font-mono">
-            <span>{dayjs(transaction.createdAt).format('DD.MM.YYYY HH:mm:ss Z')}</span>
-            <span className="font-mono text-sm">
-              {transaction.type}: {transaction.amount}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex gap-4">
+        <div className="flex flex-col gap-2">
+          <form onSubmit={handleSubmit(submitHandler)} className="flex max-w-xs flex-col gap-2">
+            <input
+              {...register('amount')}
+              type="number"
+              disabled={isSubmitting}
+              className="w-full rounded border p-2 text-black"
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full cursor-pointer rounded bg-blue-500 p-2 text-white">
+              {isSubmitting ? 'Adding...' : 'Add'}
+            </button>
+          </form>
+          <ul className="list-disc">
+            {transactions.map(transaction => (
+              <li key={transaction.id} className="flex items-center gap-2 font-mono">
+                <span>{dayjs(transaction.createdAt).format('DD.MM.YYYY HH:mm:ss Z')}</span>
+                <span className="font-mono text-sm">
+                  {transaction.type}: {transaction.amount}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <form
+          onSubmit={handleWagerSubmit(wagerSubmitHandler)}
+          className="flex max-w-xs flex-col gap-2">
+          <input
+            {...wagerRegister('amount')}
+            type="number"
+            disabled={isWagerSubmitting}
+            className="w-full rounded border p-2 text-black"
+          />
+          <input
+            {...wagerRegister('description')}
+            type="text"
+            placeholder="Description"
+            disabled={isWagerSubmitting}
+            className="w-full rounded border p-2 text-black"
+          />
+          <button
+            type="submit"
+            disabled={isWagerSubmitting}
+            className="w-full cursor-pointer rounded bg-blue-500 p-2 text-white">
+            {isWagerSubmitting ? 'Placing a bet...' : 'Placed a bet'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
