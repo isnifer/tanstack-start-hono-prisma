@@ -1,9 +1,14 @@
 import appCss from '@/index.css?url'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
-import { getHeaders } from '@tanstack/start/server'
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+  redirect,
+} from '@tanstack/react-router'
 import type { Session } from 'better-auth'
-import auth, { userQueryOptions } from '@/lib/auth.client'
+import { userQueryOptions } from '@/lib/auth.client'
 
 interface MyRouterContext {
   session: Session | null
@@ -65,10 +70,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ location }) => {
     const session = await queryClient.ensureQueryData(userQueryOptions())
     if (!session?.data?.user) {
-      return { session: null }
+      if (location.pathname === '/login') {
+        return { session: null }
+      }
+
+      throw redirect({ to: '/login' })
     }
 
     return { session: session.data }
