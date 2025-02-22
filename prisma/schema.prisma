@@ -76,13 +76,14 @@ model Verification {
 }
 
 model WalletTransaction {
-  id          String                @id @default(uuid(7)) /// Unique identifier for the transaction
-  user        User                  @relation(fields: [userId], references: [id]) /// Relation to the user
+  id          String                    @id @default(uuid(7)) /// Unique identifier for the transaction
+  user        User                      @relation(fields: [userId], references: [id]) /// Relation to the user
   userId      String /// Foreign key linking to the user
   type        WalletTransactionType /// Type of transaction (DEPOSIT, WAGER, PAYOUT, etc.)
   amount      BigInt /// Transaction amount stored in minor currency unit (e.g., cents)
+  currency    WalletTransactionCurrency @default(USD) /// Currency of the transaction
   description String? /// Optional description of the transaction
-  createdAt   DateTime              @default(now()) /// Timestamp when the transaction occurred
+  createdAt   DateTime                  @default(now()) /// Timestamp when the transaction occurred
 
   @@index([userId, createdAt]) /// Index for quick lookups by user and date
   @@map("wallet_transaction")
@@ -105,4 +106,16 @@ enum WalletTransactionType {
   AFFILIATE_PAYOUT /// Commission payout to affiliates for referring users
 
   @@map("wallet_transaction_type")
+}
+
+enum WalletTransactionCurrency {
+  PHP /// Philippines (Philippine peso) PHP 608
+  INR /// India       (Indian rupee)    INR 356
+  BRL /// Brazil      (Brazilian real)  BRL 986
+  PLN /// Poland      (Polish zloty)    PLN 985
+  RON /// Romania     (Romanian leu)    RON 946
+  VND /// Vietnam     (Vietnamese dong) VND 704
+  USD /// USA         (USD)             USD 840
+
+  @@map("wallet_transaction_currency")
 }
